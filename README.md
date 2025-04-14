@@ -23,7 +23,6 @@ Contact me if this doesn't suit your needs.
 
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, as defined in the GNU Affero General Public License v3.0 or later (AGPL-3.0-or-later) license, shall be licensed as above, without any additional terms or conditions.
 
-
 ### Attribution
 
 This macro is based on the [build.rs template by @richardanaya](https://github.com/richardanaya/axum-folder-router-htmx)

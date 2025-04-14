@@ -104,6 +104,7 @@
 //! ### State Extraction
 //!
 //! The state type provided to the macro is available in all route handlers:
+//! All routes share the same state type, though you can use ```FromRef``` for more granular state extraction.
 //!
 //! ```rust
 //! use axum::{
@@ -122,15 +123,7 @@
 //! ## Limitations
 //!
 //! - **Compile-time Only**: The routing is determined at compile time, so dynamic route registration isn't supported.
-//! - **File I/O**: The macro performs file I/O during compilation, which may have implications in certain build environments.
-//! - **Single State Type**: All routes share the same state type, though you can use ```FromRef``` for more granular state extraction.
 //!
-//! ## Best Practices
-//!
-//! 1. **Consistent Structure**: Maintain a consistent file structure to make your API organization predictable.
-//! 2. **Individual Route Files**: Use one ```route.rs``` file per route path for clarity.
-//! 3. **Module Organization**: Consider grouping related functionality in directories.
-//! 4. **Documentation**: Add comments to each route handler explaining its purpose.
 
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
