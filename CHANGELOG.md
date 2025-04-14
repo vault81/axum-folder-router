@@ -1,3 +1,28 @@
+# Unreleased
+
+## Breaking
+### Rework into attribute macro.
+
+Instead of using it like this
+
+```rust
+// ...
+folder_router!("./examples/simple/api", AppState);
+// ...
+let folder_router: Router<AppState> = folder_router();
+```
+
+It now works like this:
+```rust
+// ...
+#[folder_router("./examples/simple/api", AppState)]
+struct MyFolderRouter
+// ...
+let folder_router: Router<AppState> = MyFolderRouter::into_router();
+```
+
+This is a bit cleaner & it allows you to have multiple separate folder-based Routers.
+
 # 0.2.3
 - Refactored the detection of which methods exist,
   we actually parse the file now instead of just checking that it contains `pub async #method_name`

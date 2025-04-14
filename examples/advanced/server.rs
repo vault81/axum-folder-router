@@ -7,7 +7,8 @@ struct AppState {
 }
 
 // Imports route.rs files & generates an init fn
-folder_router!("examples/advanced/api", AppState);
+#[folder_router("examples/advanced/api", AppState)]
+struct MyFolderRouter();
 
 pub async fn server() -> anyhow::Result<()> {
     // Create app state
@@ -16,7 +17,7 @@ pub async fn server() -> anyhow::Result<()> {
     };
 
     // Use the init fn generated above
-    let folder_router: Router<AppState> = folder_router();
+    let folder_router: Router<AppState> = MyFolderRouter::into_router();
 
     // Build the router and provide the state
     let app: Router<()> = folder_router.with_state(app_state);

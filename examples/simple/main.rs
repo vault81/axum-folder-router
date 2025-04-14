@@ -7,7 +7,8 @@ struct AppState {
 }
 
 // Imports route.rs files & generates an init fn
-folder_router!("./examples/simple/api", AppState);
+#[folder_router("./examples/simple/api", AppState)]
+struct MyFolderRouter();
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -17,7 +18,7 @@ async fn main() -> anyhow::Result<()> {
     };
 
     // Use the init fn generated above
-    let folder_router: Router<AppState> = folder_router();
+    let folder_router: Router<AppState> = MyFolderRouter::into_router();
 
     // Build the router and provide the state
     let app: Router<()> = folder_router.with_state(app_state);

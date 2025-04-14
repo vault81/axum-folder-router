@@ -177,7 +177,6 @@ impl ModuleDir {
         }
     }
 }
-
 /// Creates an Axum router module tree & creation function
 /// by scanning a directory for `route.rs` files.
 ///
@@ -191,9 +190,12 @@ impl ModuleDir {
 /// This will scan all `route.rs` files in the `./src/api` directory and its
 /// subdirectories, automatically mapping their path structure to URL routes
 /// with the specified state type.
-#[proc_macro]
-pub fn folder_router(input: TokenStream) -> TokenStream {
-    let args = parse_macro_input!(input as FolderRouterArgs);
+#[proc_macro_attribute]
+pub fn folder_router(attr: TokenStream, item: TokenStream) -> TokenStream {
+    let args = parse_macro_input!(attr as FolderRouterArgs);
+    let input_item = parse_macro_input!(item as syn::ItemStruct);
+    let struct_name = &input_item.ident;
+
     let base_path = args.path;
     let state_type = args.state_type;
 
@@ -214,8 +216,15 @@ pub fn folder_router(input: TokenStream) -> TokenStream {
         });
     }
 
+    fn replace_special_chars(input: &str) -> String {
+        input
+            .chars()
+            .map(|c| if c.is_alphanumeric() { c } else { '_' })
+            .collect()
+    }
+
     // Build module tree
-    let mut root = ModuleDir::new("__folder_router");
+    let mut root = ModuleDir::new(&format!("__folder_router_{}", replace_special_chars(&base_path)));
     for (route_path, rel_path) in &routes {
         add_to_module_tree(&mut root, rel_path, route_path);
     }
@@ -268,16 +277,20 @@ pub fn folder_router(input: TokenStream) -> TokenStream {
 
     // Generate the final code
     let expanded = quote! {
-        #[path = #base_path_lit]
-        mod #root_mod_ident {
-            #mod_hierarchy
-        }
+      #[path = #base_path_lit]
+      mod #root_mod_ident {
+          #mod_hierarchy
+      }
 
-        pub fn folder_router() -> axum::Router<#state_type> {
-            let mut router = axum::Router::new();
-            #(#route_registrations)*
-            router
-        }
+      #input_item
+
+      impl #struct_name {
+          pub fn into_router() -> axum::Router<#state_type> {
+              let mut router = axum::Router::new();
+              #(#route_registrations)*
+              router
+          }
+      }
     };
 
     expanded.into()
@@ -288,11 +301,11 @@ pub fn folder_router(input: TokenStream) -> TokenStream {
 /// e.g. for the file
 ///
 /// ```rust
-/// pub async fn get() {}  # ✅ => "get" be added to vec
-/// pub fn post() {}       # not async
-/// async fn delete() {}   # not pub
-/// fn patch() {}          # not pub nor async
-/// pub fn non_verb() {}   # not a http verb
+/// pub async fn get() {}  // ✅ => "get" be added to vec
+/// pub fn post() {}       // not async
+/// async fn delete() {}   // not pub
+/// fn patch() {}          // not pub nor async
+/// pub fn non_verb() {}   // not a http verb
 /// ```
 ///
 /// it returns: `vec!["get"]`
