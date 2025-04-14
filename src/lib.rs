@@ -185,20 +185,6 @@ impl ModuleDir {
 /// * `state_type` - The type name of your application state that will be shared
 ///   across all routes
 ///
-/// # Example
-///
-/// ```rust
-/// use axum_folder_router::folder_router;
-/// # #[derive(Debug, Clone)]
-/// # struct AppState ();
-/// #
-/// folder_router!("./src/api", AppState);
-/// #
-/// fn main() {
-///   let router = folder_router();
-/// }
-/// ```
-///
 /// This will scan all `route.rs` files in the `./src/api` directory and its
 /// subdirectories, automatically mapping their path structure to URL routes
 /// with the specified state type.
@@ -215,6 +201,15 @@ pub fn folder_router(input: TokenStream) -> TokenStream {
     // Collect route files
     let mut routes = Vec::new();
     collect_route_files(&base_dir, &base_dir, &mut routes);
+
+    if routes.is_empty() {
+        return TokenStream::from(quote! {
+            compile_error!(concat!("No route.rs files found in the specified directory: ",
+                #base_path,
+                ". Make sure the path is correct and contains route.rs files."
+            ));
+        });
+    }
 
     // Build module tree
     let mut root = ModuleDir::new("__folder_router");
@@ -234,87 +229,95 @@ pub fn folder_router(input: TokenStream) -> TokenStream {
         // Generate module path and axum path
         let (axum_path, mod_path) = path_to_module_path(&rel_path);
 
-        // Read the file content to find HTTP methods
-        let file_content = fs::read_to_string(&route_path).unwrap_or_default();
-        let methods = ["get", "post", "put", "delete", "patch", "head", "options"];
+        let method_registrations = methods_for_route(&route_path);
 
-        let mut method_registrations = Vec::new();
-        for method in &methods {
-            if file_content.contains(&format!("pub async fn {}(", method)) {
-                let method_ident = format_ident!("{}", method);
-                method_registrations.push((method, method_ident));
-            }
+        if method_registrations.is_empty() {
+            return TokenStream::from(quote! {
+                compile_error!(concat!("No routes defined in '",
+                    #base_path
+                    "', make sure to define at least one `pub async fn` named after an method. (E.g. get, post, put, delete)"
+                ));
+            });
         }
 
-        if !method_registrations.is_empty() {
-            let (_first_method, first_method_ident) = &method_registrations[0];
-            let mod_path_tokens = generate_mod_path_tokens(&mod_path);
+        let first_method = &method_registrations[0];
+        let first_method_ident = format_ident!("{}", first_method);
 
-            let mut builder = quote! {
-                axum::routing::#first_method_ident(#root_mod_ident::#mod_path_tokens::#first_method_ident)
+        let mod_path_tokens = generate_mod_path_tokens(&mod_path);
+
+        let mut builder = quote! {
+            axum::routing::#first_method_ident(#root_mod_ident::#mod_path_tokens::#first_method_ident)
+        };
+
+        for method in &method_registrations[1..] {
+            let method_ident = format_ident!("{}", method);
+
+            builder = quote! {
+                #builder.#method_ident(#root_mod_ident::#mod_path_tokens::#method_ident)
             };
-
-            for (_method, method_ident) in &method_registrations[1..] {
-                builder = quote! {
-                    #builder.#method_ident(#root_mod_ident::#mod_path_tokens::#method_ident)
-                };
-            }
-
-            let registration = quote! {
-                router = router.route(#axum_path, #builder);
-            };
-            route_registrations.push(registration);
         }
+
+        let registration = quote! {
+            router = router.route(#axum_path, #builder);
+        };
+        route_registrations.push(registration);
     }
 
     // Generate the final code
     let expanded = quote! {
-            #[path = #base_path_lit]
-            mod #root_mod_ident {
-                #mod_hierarchy
-            }
+        #[path = #base_path_lit]
+        mod #root_mod_ident {
+            #mod_hierarchy
+        }
 
-            fn folder_router() -> axum::Router::<#state_type> {
-                let mut router = axum::Router::<#state_type>::new();
-                #(#route_registrations)*
-                router
-            }
+        pub fn folder_router() -> axum::Router<#state_type> {
+            let mut router = axum::Router::new();
+            #(#route_registrations)*
+            router
+        }
     };
 
     expanded.into()
 }
 
-// Add a path to the module tree
-fn add_to_module_tree(root: &mut ModuleDir, rel_path: &Path, _route_path: &Path) {
-    let mut current = root;
+fn methods_for_route(route_path: &PathBuf) -> Vec<&str> {
+    let file_content = fs::read_to_string(&route_path).unwrap_or_default();
+    let methods = ["get", "post", "put", "delete", "patch", "head", "options"];
 
+    let mut method_registrations = Vec::new();
+    for method in methods {
+        if file_content.contains(&format!("pub async fn {}(", method)) {
+            // let method_ident = format_ident!("{}", method);
+            method_registrations.push(method);
+        }
+    }
+    method_registrations
+}
+
+// Add a route to the module tree
+fn add_to_module_tree(root: &mut ModuleDir, rel_path: &Path, _route_path: &Path) {
     let components: Vec<_> = rel_path
         .components()
         .map(|c| c.as_os_str().to_string_lossy().to_string())
         .collect();
 
-    // Handle special case for root route.rs
     if components.is_empty() {
-        current.has_route = true;
+        root.has_route = true;
         return;
     }
 
-    for (i, component) in components.iter().enumerate() {
-        // For the file itself (route.rs), we just mark the directory as having a route
-        if i == components.len() - 1 && component == "route.rs" {
-            current.has_route = true;
+    let mut root = root;
+
+    for (i, segment) in components.iter().enumerate() {
+        if i == components.len() - 1 && segment == "route.rs" {
+            root.has_route = true;
             break;
         }
 
-        // For directories, add them to the tree
-        let dir_name = component.clone();
-        if !current.children.contains_key(&dir_name) {
-            current
-                .children
-                .insert(dir_name.clone(), ModuleDir::new(&dir_name));
-        }
-
-        current = current.children.get_mut(&dir_name).unwrap();
+        root = root
+            .children
+            .entry(segment.clone())
+            .or_insert_with(|| ModuleDir::new(segment));
     }
 }
 
@@ -322,7 +325,6 @@ fn add_to_module_tree(root: &mut ModuleDir, rel_path: &Path, _route_path: &Path)
 fn generate_module_hierarchy(dir: &ModuleDir) -> proc_macro2::TokenStream {
     let mut result = proc_macro2::TokenStream::new();
 
-    // panic!("{:?}", dir);
     // Add route.rs module if this directory has one
     if dir.has_route {
         let route_mod = quote! {
@@ -400,22 +402,22 @@ fn path_to_module_path(rel_path: &Path) -> (String, Vec<String>) {
     for (i, segment) in components.iter().enumerate() {
         if i == components.len() - 1 && segment == "route.rs" {
             mod_path.push("route".to_string());
-        } else if segment.starts_with('[') && segment.ends_with(']') {
-            let inner = &segment[1..segment.len() - 1];
-            if let Some(param) = inner.strip_prefix("...") {
-                axum_path.push_str(&format!("/{{*{}}}", param));
-                mod_path.push(format!("___{}", param));
-            } else {
-                axum_path.push_str(&format!("/{{{}}}", inner));
-                mod_path.push(format!("__{}", inner));
-            }
-        } else if segment != "route.rs" {
-            // Skip the actual route.rs file
-            axum_path.push('/');
-            axum_path.push_str(segment);
-            mod_path.push(normalize_module_name(segment));
         } else {
-            println!("blub");
+            // Process directory name
+            let normalized = normalize_module_name(segment);
+            mod_path.push(normalized);
+
+            // Process URL path
+            if segment.starts_with('[') && segment.ends_with(']') {
+                let param = &segment[1..segment.len() - 1];
+                if let Some(stripped) = param.strip_prefix("...") {
+                    axum_path.push_str(&format!("/{{*{}}}", stripped));
+                } else {
+                    axum_path.push_str(&format!("/{{:{}}}", param));
+                }
+            } else {
+                axum_path.push_str(&format!("/{}", segment));
+            }
         }
     }
 
@@ -426,9 +428,9 @@ fn path_to_module_path(rel_path: &Path) -> (String, Vec<String>) {
     (axum_path, mod_path)
 }
 
-// Recursively collect route.rs files (unchanged from your original)
-fn collect_route_files(base_dir: &Path, current_dir: &Path, routes: &mut Vec<(PathBuf, PathBuf)>) {
-    if let Ok(entries) = fs::read_dir(current_dir) {
+// Collect route.rs files recursively
+fn collect_route_files(base_dir: &Path, dir: &Path, routes: &mut Vec<(PathBuf, PathBuf)>) {
+    if let Ok(entries) = fs::read_dir(dir) {
         for entry in entries.filter_map(std::result::Result::ok) {
             let path = entry.path();
 
@@ -438,12 +440,6 @@ fn collect_route_files(base_dir: &Path, current_dir: &Path, routes: &mut Vec<(Pa
                 if let Ok(rel_dir) = path.strip_prefix(base_dir) {
                     routes.push((path.clone(), rel_dir.to_path_buf()));
                 }
-
-                // if let Some(parent) = path.parent() {
-                //     if let Ok(rel_dir) = parent.strip_prefix(base_dir) {
-                //         routes.push((path.clone(), rel_dir.to_path_buf()));
-                //     }
-                // }
             }
         }
     }
