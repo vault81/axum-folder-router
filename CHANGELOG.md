@@ -1,47 +1,61 @@
-# Unreleased
+# Changelog
 
-- nothing yet
+All notable changes to this project will be documented in this file.
 
-# 0.3.0
+## [Unreleased]
 
-After a lot of experimenting it seems I'm starting to settle on an API, so this should likely be the last breaking change in a while.
+- No changes yet
 
-## Breaking
+## [0.3.0] - 2025-04-15
 
-### Rework into attribute macro.
+After some experimentation, the API has begun to stabilize. This should likely be the last breaking change for some time.
 
-Instead of this
+### Breaking Changes
 
-```rust
-// ...
-folder_router!("./examples/simple/api", AppState);
-// ...
-let folder_router: Router<AppState> = folder_router();
-```
+- **Reworked implementation into an attribute macro**
+  - Previous implementation required function calls:
+    ```rust
+    folder_router!("./examples/simple/api", AppState);
+    // ...
+    let folder_router: Router<AppState> = folder_router();
+    ```
+  - New implementation uses an attribute macro:
+    ```rust
+    #[folder_router("./examples/simple/api", AppState)]
+    struct MyFolderRouter;
+    // ...
+    let folder_router: Router<AppState> = MyFolderRouter::into_router();
+    ```
+  - This approach provides a cleaner API and allows for multiple separate folder-based Routers
 
-It now works like this:
-```rust
-// ...
-#[folder_router("./examples/simple/api", AppState)]
-struct MyFolderRouter
-// ...
-let folder_router: Router<AppState> = MyFolderRouter::into_router();
-```
+## [0.2.3] - 2025-04-14
 
-This is a bit cleaner & it allows you to have multiple separate folder-based Routers.
+### Changed
+- **Improved method detection** - Now properly parses files instead of using string matching
+  - Previous version checked if file contained ```pub async #method_name```
+  - New version properly parses the file using `syn` for more accurate detection
 
-# 0.2.3
-- Refactored the detection of which methods exist,
-  we actually parse the file now instead of just checking that it contains `pub async #method_name`
+## [0.2.2] - 2025-04-14
 
-# 0.2.2
-- Re-licensed to MIT
+### Changed
+- **License changed to MIT**
 
-# 0.2.1
-- Documentation & test improvements
+## [0.2.1] - 2025-04-14
 
-# 0.2.0
-- Generate module imports instead of `include!`ing, so rust-analyzer works.
+### Improved
+- Enhanced documentation
+- Added more comprehensive tests
 
-# 0.1.0
-- MVP adapted from https://github.com/richardanaya/axum-folder-router-htmx
+## [0.2.0] - 2024-04-14
+
+### Changed
+- **Improved code integration** 
+  - Generate module imports instead of using ```include!```
+  - Makes the code compatible with rust-analyzer
+  - Provides better IDE support
+
+## [0.1.0] - 2024-04-14
+
+### Added
+- Initial release
+- Minimum viable product adapted from https://github.com/richardanaya/axum-folder-router-htmx

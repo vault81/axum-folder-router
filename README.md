@@ -4,16 +4,21 @@
 ![Maintenance](https://img.shields.io/badge/maintenance-actively--developed-brightgreen.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-
-
 # axum-folder-router
 
-```folder_router``` is a procedural macro for the Axum web framework that automatically generates router boilerplate based on your file structure.
-It simplifies route organization by using filesystem conventions to define your API routes.
+```#[folder_router(...)]``` is a procedural attribute macro for the Axum web framework that automatically generates router boilerplate based on your direcory & file structure. 
+Inspired by popular frameworks like next.js.
+
+## Features
+
+- **File System-Based Routing**: Define your API routes using intuitive folder structures
+- **Reduced Boilerplate**: Automatically generates route mapping code
+- **IDE Support**: Generates proper module imports for better rust-analyzer integration
+- **Multiple Routers**: Create separate folder-based routers in the same application
 
 ## Usage
 
-See [the examples](./examples) or [docs.rs](https://docs.rs/axum-folder-router).
+For detailed instructions see [the examples](./examples) or [docs.rs](https://docs.rs/axum-folder-router).
 
 ## License
 
