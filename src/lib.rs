@@ -11,7 +11,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! axum_folder_router = "0.1.0"
+//! axum_folder_router = "0.2"
 //! axum = "0.8"
 //! ```
 //!
@@ -120,6 +120,8 @@
 //! ## Limitations
 //!
 //! - **Compile-time Only**: The routing is determined at compile time, so dynamic route registration isn't supported.
+//! - **Expects seperate directory**: To make rust-analyzer & co work correctly the macro imports all route.rs files inside the given directory tree.
+//!   It is highly recommended to keep the route directory seperate from the rest of your module-tree.
 use std::{
     collections::HashMap,
     fs,

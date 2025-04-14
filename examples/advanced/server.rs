@@ -7,10 +7,9 @@ struct AppState {
 }
 
 // Imports route.rs files & generates an init fn
-folder_router!("./examples/simple/api", AppState);
+folder_router!("examples/advanced/api", AppState);
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
+pub async fn server() -> anyhow::Result<()> {
     // Create app state
     let app_state = AppState {
         _foo: "".to_string(),
