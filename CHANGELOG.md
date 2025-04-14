@@ -6,6 +6,10 @@ All notable changes to this project will be documented in this file.
 
 - No changes yet
 
+## [0.3.1] - 2025-04-15
+
+- Fix invalid doc links
+
 ## [0.3.0] - 2025-04-15
 
 After some experimentation, the API has begun to stabilize. This should likely be the last breaking change for some time.
