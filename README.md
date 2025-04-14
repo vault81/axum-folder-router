@@ -7,7 +7,8 @@
 
 # axum-folder-router
 
-```folder_router``` is a procedural macro for the Axum web framework that automatically generates router boilerplate based on your file structure. It simplifies route organization by using filesystem conventions to define your API routes.
+```folder_router``` is a procedural macro for the Axum web framework that automatically generates router boilerplate based on your file structure.
+It simplifies route organization by using filesystem conventions to define your API routes.
 
 ## Usage
 

@@ -6,7 +6,7 @@ struct AppState {
     _foo: String,
 }
 
-folder_router!("./examples/simple/api", AppState);
+folder_router!("examples/advanced/api", AppState);
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

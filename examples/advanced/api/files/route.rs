@@ -5,5 +5,5 @@ pub async fn get() -> impl IntoResponse {
 }
 
 pub async fn post() -> impl IntoResponse {
-    "Posted successfully".into_response()
+"Posted successfully".into_response()
 }

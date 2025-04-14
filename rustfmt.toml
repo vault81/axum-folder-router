@@ -1,0 +1,23 @@
+
+edition = "2024"
+max_width = 100
+tab_spaces = 4
+
+
+# unstable
+format_macro_bodies = true
+format_macro_matchers = true
+format_strings = true
+group_imports = "StdExternalCrate"
+imports_granularity = "Crate"
+imports_layout = "HorizontalVertical"
+overflow_delimited_expr = true
+reorder_impl_items = true
+struct_field_align_threshold = 4
+struct_lit_single_line = false
+trailing_comma = "Vertical"
+unstable_features = true
+use_field_init_shorthand = true
+use_try_shorthand = true
+wrap_comments = true
+# format_brace_macros = true
