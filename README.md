@@ -1,7 +1,7 @@
 
 [![Crates.io](https://img.shields.io/crates/v/axum-folder-router)](https://crates.io/crates/axum-folder-router)
 [![Documentation](https://docs.rs/axum-folder-router/badge.svg)](https://docs.rs/axum-folder-router)
-![Maintenance](https://img.shields.io/badge/maintenance-activly--developed-brightgreen.svg)
+![Maintenance](https://img.shields.io/badge/maintenance-actively--developed-brightgreen.svg)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 
