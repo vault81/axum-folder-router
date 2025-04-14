@@ -1,6 +1,6 @@
 [package]
 name = "axum-folder-router"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2024"
 readme = "./README.md"
 authors = ["Tristan Druyen <ek36g2vcc@mozmail.com>"]
@@ -9,8 +9,7 @@ keywords = ["axum", "controller", "macro", "routing"]
 description = "Helper macro for simple folder based routing of axum handlers"
 homepage = "https://git.vlt81.de/vault81/axum-folder-router"
 repository = "https://git.vlt81.de/vault81/axum-folder-router"
-license = "AGPL-3.0-or-later"
-
+license = "MIT"
 
 [lib]
 path  = "./src/lib.rs"
