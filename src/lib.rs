@@ -11,7 +11,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! axum_folder_router = "0.2"
+//! axum_folder_router = "0.3"
 //! axum = "0.8"
 //! ```
 //!
