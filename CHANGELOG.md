@@ -1,5 +1,7 @@
 # Unreleased
 
+- nothing yet
+
 # 0.3.0
 
 After a lot of experimenting it seems I'm starting to settle on an API, so this should likely be the last breaking change in a while.
