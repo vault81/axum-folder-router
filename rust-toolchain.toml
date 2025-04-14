@@ -1,0 +1,16 @@
+[toolchain]
+channel = "nightly-2025-03-01"
+components = [
+    "cargo",
+    "rust-analyzer",
+    "rust-src",
+    "rustc-codegen-cranelift",
+    "rustc-dev",
+    "rustfmt",
+]
+profile = "default"
+targets = [
+    "wasm32-unknown-unknown",
+    "x86_64-pc-windows-msvc",
+    "x86_64-unknown-linux-gnu",
+]
