@@ -296,7 +296,6 @@ pub fn folder_router(input: TokenStream) -> TokenStream {
 /// ```
 ///
 /// it returns: `vec!["get"]`
-///
 fn methods_for_route(route_path: &PathBuf) -> Vec<&'static str> {
     // Read the file content
     let file_content = match fs::read_to_string(route_path) {
