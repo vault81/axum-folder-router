@@ -224,7 +224,10 @@ pub fn folder_router(attr: TokenStream, item: TokenStream) -> TokenStream {
     }
 
     // Build module tree
-    let mut root = ModuleDir::new(&format!("__folder_router_{}", replace_special_chars(&base_path)));
+    let mut root = ModuleDir::new(&format!(
+        "__folder_router_{}",
+        replace_special_chars(&base_path)
+    ));
     for (route_path, rel_path) in &routes {
         add_to_module_tree(&mut root, rel_path, route_path);
     }
