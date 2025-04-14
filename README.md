@@ -17,7 +17,7 @@ See [the examples](./examples) or [docs.rs](https://docs.rs/axum-folder-router).
 
 ## License
 
-This repository, is licesed permissively under the terms of the MIT license.
+This repository, is licensed permissively under the terms of the MIT license.
 
 ### Contribution
 
