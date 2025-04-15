@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 
 - No changes yet
 
+## [0.3.2] - 2025-04-15
+- Refactor internals
+- Add solid testing
+  - explicitly test generated macro output using macrotest
+  - test error output using trybuilt
+
 ## [0.3.1] - 2025-04-15
 
 - Fix invalid doc links

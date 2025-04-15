@@ -1,6 +1,6 @@
 [package]
 name = "axum-folder-router"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2024"
 readme = "./README.md"
 authors = ["Tristan Druyen <ek36g2vcc@mozmail.com>"]

@@ -190,9 +190,6 @@ impl ModuleDir {
 /// * `state_type` - The type name of your application state that will be shared
 ///   across all routes
 ///
-/// This will scan all `route.rs` files in the `./src/api` directory and its
-/// subdirectories, automatically mapping their path structure to URL routes
-/// with the specified state type.
 #[allow(clippy::missing_panics_doc)]
 #[proc_macro_attribute]
 pub fn folder_router(attr: TokenStream, item: TokenStream) -> TokenStream {
