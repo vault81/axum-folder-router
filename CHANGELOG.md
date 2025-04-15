@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-- No changes yet
+- Refactored huge lib.rs into 3 seperate files.
 
 ## [0.3.3] - 2025-04-15
 
