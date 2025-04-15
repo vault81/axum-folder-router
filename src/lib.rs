@@ -124,6 +124,7 @@
 //!   It is highly recommended to keep the route directory seperate from the rest of your module-tree.
 use std::{
     collections::HashMap,
+    fmt::Write,
     fs,
     path::{Path, PathBuf},
 };
@@ -177,6 +178,7 @@ impl ModuleDir {
         }
     }
 }
+
 /// Creates an Axum router module tree & creation function
 /// by scanning a directory for `route.rs` files.
 ///
@@ -200,7 +202,7 @@ pub fn folder_router(attr: TokenStream, item: TokenStream) -> TokenStream {
     let state_type = args.state_type;
 
     // Get the project root directory
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or("./".to_string());
     let base_dir = Path::new(&manifest_dir).join(&base_path);
 
     // Collect route files
@@ -216,18 +218,22 @@ pub fn folder_router(attr: TokenStream, item: TokenStream) -> TokenStream {
         });
     }
 
-    fn replace_special_chars(input: &str) -> String {
-        input
+    // Build module tree
+    // avoid conflicts by interpolating struct name & path
+    let mut root = ModuleDir::new(&format!(
+        "__folder_router__{}__{}",
+        struct_name
+            .to_string()
             .chars()
             .map(|c| if c.is_alphanumeric() { c } else { '_' })
-            .collect()
-    }
-
-    // Build module tree
-    let mut root = ModuleDir::new(&format!(
-        "__folder_router_{}",
-        replace_special_chars(&base_path)
+            .map(|c| c.to_ascii_lowercase())
+            .collect::<String>(),
+        base_path
+            .chars()
+            .map(|c| if c.is_alphanumeric() { c } else { '_' })
+            .collect::<String>()
     ));
+
     for (route_path, rel_path) in &routes {
         add_to_module_tree(&mut root, rel_path, route_path);
     }
@@ -235,7 +241,10 @@ pub fn folder_router(attr: TokenStream, item: TokenStream) -> TokenStream {
     // Generate module tree
     let root_mod_ident = format_ident!("{}", root.name);
 
-    let base_path_lit = LitStr::new(base_dir.to_str().unwrap(), proc_macro2::Span::call_site());
+    let base_path_lit = LitStr::new(
+        base_dir.to_str().unwrap_or("./"),
+        proc_macro2::Span::call_site(),
+    );
     let mod_hierarchy = generate_module_hierarchy(&root);
 
     // Generate route registrations
@@ -314,15 +323,13 @@ pub fn folder_router(attr: TokenStream, item: TokenStream) -> TokenStream {
 /// it returns: `vec!["get"]`
 fn methods_for_route(route_path: &PathBuf) -> Vec<&'static str> {
     // Read the file content
-    let file_content = match fs::read_to_string(route_path) {
-        Ok(content) => content,
-        Err(_) => return Vec::new(),
+    let Ok(file_content) = fs::read_to_string(route_path) else {
+        return Vec::new();
     };
 
     // Parse the file content into a syn syntax tree
-    let file = match parse_file(&file_content) {
-        Ok(file) => file,
-        Err(_) => return Vec::new(),
+    let Ok(file) = parse_file(&file_content) else {
+        return Vec::new();
     };
 
     // Define HTTP methods we're looking for
@@ -433,9 +440,9 @@ fn normalize_module_name(name: &str) -> String {
     if name.starts_with('[') && name.ends_with(']') {
         let inner = &name[1..name.len() - 1];
         if let Some(stripped) = inner.strip_prefix("...") {
-            format!("___{}", stripped)
+            format!("___{stripped}")
         } else {
-            format!("__{}", inner)
+            format!("__{inner}")
         }
     } else {
         name.replace(['-', '.'], "_")
@@ -469,12 +476,12 @@ fn path_to_module_path(rel_path: &Path) -> (String, Vec<String>) {
             if segment.starts_with('[') && segment.ends_with(']') {
                 let param = &segment[1..segment.len() - 1];
                 if let Some(stripped) = param.strip_prefix("...") {
-                    axum_path.push_str(&format!("/{{*{}}}", stripped));
+                    write!(&mut axum_path, "/{{*{stripped}}}").unwrap();
                 } else {
-                    axum_path.push_str(&format!("/{{:{}}}", param));
+                    write!(&mut axum_path, "/{{:{param}}}").unwrap();
                 }
             } else {
-                axum_path.push_str(&format!("/{}", segment));
+                write!(&mut axum_path, "/{segment}").unwrap();
             }
         }
     }

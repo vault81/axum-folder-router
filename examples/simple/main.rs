@@ -14,7 +14,7 @@ struct MyFolderRouter();
 async fn main() -> anyhow::Result<()> {
     // Create app state
     let app_state = AppState {
-        _foo: "".to_string(),
+        _foo: String::new(),
     };
 
     // Use the init fn generated above

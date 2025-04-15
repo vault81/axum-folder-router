@@ -72,7 +72,8 @@
               cargo-udeps
               cargo-outdated
               cargo-release
-	      cargo-readme
+              cargo-readme
+              cargo-expand
               calc
               fish
               inotify-tools
@@ -93,7 +94,8 @@
         packages = {
           # default = pkgs.callPackage ./package.nix { };
         };
-      }) // {
+      })
+    // {
       hydraJobs =
         let
           system = "x86_64-linux";
