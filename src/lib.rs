@@ -131,7 +131,6 @@ use std::{
 
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
-use regex::Regex;
 use syn::{
     Ident,
     Item,
@@ -204,29 +203,22 @@ pub fn folder_router(attr: TokenStream, item: TokenStream) -> TokenStream {
     let base_path = args.path;
     let state_type = args.state_type;
 
-    let manifest_dir = {
-        // Get the project root directory
-        let dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or("./".to_string());
-
-        // Create regex to match macrotest pattern with exactly 42 alphanumeric chars
-        // This is the only way to enable us to reference the example route folders in
-        // our macrotest::expand tests
-        let re = Regex::new(r"^(.+)/target/tests/axum-folder-router/[A-Za-z0-9]{42}$").unwrap();
-
-        // If the pattern matches, extract the real project root
-        // Being extra caucious to warn any users about this unexpected Workaround
-        if let Some(captures) = re.captures(&dir) {
-            #[cfg(not(debug_assertions))]
-            return TokenStream::from(quote! {
-                compile_error!("axum-folder-router: MACROTEST_WORKAROUND compiled in non-debug env, something is likely wrong!");
-            });
-            captures.get(1).unwrap().as_str().to_string()
-        } else {
-            dir
-        }
-    };
-
+    let manifest_dir = get_manifest_dir();
     let base_dir = Path::new(&manifest_dir).join(&base_path);
+
+    let mod_namespace = format!(
+        "__folder_router__{}__{}",
+        struct_name
+            .to_string()
+            .chars()
+            .map(|c| if c.is_alphanumeric() { c } else { '_' })
+            .map(|c| c.to_ascii_lowercase())
+            .collect::<String>(),
+        base_path
+            .chars()
+            .map(|c| if c.is_alphanumeric() { c } else { '_' })
+            .collect::<String>()
+    );
 
     // Collect route files
     let mut routes = Vec::new();
@@ -244,94 +236,44 @@ pub fn folder_router(attr: TokenStream, item: TokenStream) -> TokenStream {
         });
     }
 
-    // Build module tree
-    // avoid conflicts by interpolating struct name & path
-    let mut root = ModuleDir::new(&format!(
-        "__folder_router__{}__{}",
-        struct_name
-            .to_string()
-            .chars()
-            .map(|c| if c.is_alphanumeric() { c } else { '_' })
-            .map(|c| c.to_ascii_lowercase())
-            .collect::<String>(),
-        base_path
-            .chars()
-            .map(|c| if c.is_alphanumeric() { c } else { '_' })
-            .collect::<String>()
-    ));
+    let module_tree = module_tree(&mod_namespace, &base_dir, &routes);
+    let route_registrations = route_registrations(&mod_namespace, &routes);
 
-    for (route_path, rel_path) in &routes {
-        add_to_module_tree(&mut root, rel_path, route_path);
-    }
-
-    // Generate module tree
-    let root_mod_ident = format_ident!("{}", root.name);
-
-    let base_path_lit = LitStr::new(
-        base_dir.to_str().unwrap_or("./"),
-        proc_macro2::Span::call_site(),
-    );
-    let mod_hierarchy = generate_module_hierarchy(&root);
-
-    // Generate route registrations
-    let mut route_registrations = Vec::new();
-    for (route_path, rel_path) in routes {
-        // Generate module path and axum path
-        let (axum_path, mod_path) = path_to_module_path(&rel_path);
-
-        let method_registrations = methods_for_route(&route_path);
-
-        if method_registrations.is_empty() {
-            return TokenStream::from(quote! {
-                compile_error!(concat!("No routes defined in '",
-                    #base_path,
-                    "', make sure to define at least one `pub async fn` named after an method. (e.g. get, post, put, delete)"
-                ));
-            });
-        }
-
-        let first_method = &method_registrations[0];
-        let first_method_ident = format_ident!("{}", first_method);
-
-        let mod_path_tokens = generate_mod_path_tokens(&mod_path);
-
-        let mut builder = quote! {
-            axum::routing::#first_method_ident(#root_mod_ident::#mod_path_tokens::#first_method_ident)
-        };
-
-        for method in &method_registrations[1..] {
-            let method_ident = format_ident!("{}", method);
-
-            builder = quote! {
-                #builder.#method_ident(#root_mod_ident::#mod_path_tokens::#method_ident)
-            };
-        }
-
-        let registration = quote! {
-            router = router.route(#axum_path, #builder);
-        };
-        route_registrations.push(registration);
-    }
-
-    // Generate the final code
-    let expanded = quote! {
-      #[path = #base_path_lit]
-      mod #root_mod_ident {
-          #mod_hierarchy
-      }
+    quote! {
+      #module_tree
 
       #input_item
 
       impl #struct_name {
           pub fn into_router() -> axum::Router<#state_type> {
               let mut router = axum::Router::new();
-              #(#route_registrations)*
+              #route_registrations
               router
           }
       }
-    };
+    }
+    .into()
+}
 
-    expanded.into()
+// this is a workaround for macrotest behaviour
+// which makes it impossible to get deterministic macro results
+// without this weird stuff
+#[cfg(debug_assertions)]
+fn get_manifest_dir() -> String {
+    use regex::Regex;
+    let dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or("./".to_string());
+    let re = Regex::new(r"^(.+)/target/tests/axum-folder-router/[A-Za-z0-9]{42}$").unwrap();
+
+    if let Some(captures) = re.captures(&dir) {
+        captures.get(1).unwrap().as_str().to_string()
+    } else {
+        dir
+    }
+}
+
+#[cfg(not(debug_assertions))]
+fn get_manifest_dir() -> String {
+    std::env::var("CARGO_MANIFEST_DIR").unwrap_or("./".to_string())
 }
 
 /// parses the file at the specified location using syn
@@ -383,6 +325,81 @@ fn methods_for_route(route_path: &PathBuf) -> Vec<&'static str> {
     }
 
     found_methods
+}
+
+fn route_registrations(
+    // root_namespace_str: String,
+    // base_dir: String,
+    root_namespace_str: &str,
+    routes: &Vec<(PathBuf, PathBuf)>,
+) -> proc_macro2::TokenStream {
+    let root_namespace_ident = format_ident!("{}", root_namespace_str);
+
+    let mut route_registrations = Vec::new();
+    for (route_path, rel_path) in routes {
+        // Generate module path and axum path
+        let (axum_path, mod_path) = path_to_module_path(rel_path);
+
+        let method_registrations = methods_for_route(route_path);
+
+        if method_registrations.is_empty() {
+            return quote! {
+                compile_error!(concat!(
+                    "No routes defined in your route.rs's !\n",
+                    "ensure that at least one `pub async fn` named after an HTTP verb is defined. (e.g. get, post, put, delete)"
+                ));
+            };
+        }
+
+        let first_method = &method_registrations[0];
+        let first_method_ident = format_ident!("{}", first_method);
+
+        let mod_path_tokens = generate_mod_path_tokens(&mod_path);
+
+        let mut builder = quote! {
+            axum::routing::#first_method_ident(#root_namespace_ident::#mod_path_tokens::#first_method_ident)
+        };
+
+        for method in &method_registrations[1..] {
+            let method_ident = format_ident!("{}", method);
+
+            builder = quote! {
+                #builder.#method_ident(#root_namespace_ident::#mod_path_tokens::#method_ident)
+            };
+        }
+
+        let registration = quote! {
+            router = router.route(#axum_path, #builder);
+        };
+        route_registrations.push(registration);
+    }
+
+    proc_macro2::TokenStream::from_iter(route_registrations)
+}
+
+fn module_tree(
+    root_namespace_str: &str,
+    base_dir: &Path,
+    routes: &Vec<(PathBuf, PathBuf)>,
+) -> proc_macro2::TokenStream {
+    let root_namespace_ident = format_ident!("{}", root_namespace_str);
+    let base_path_lit = LitStr::new(
+        base_dir.to_str().unwrap_or("./"),
+        proc_macro2::Span::call_site(),
+    );
+
+    let mut root = ModuleDir::new(root_namespace_str);
+    for (route_path, rel_path) in routes {
+        add_to_module_tree(&mut root, rel_path, route_path);
+    }
+
+    let mod_hierarchy = generate_module_hierarchy(&root);
+    quote! {
+        #[path = #base_path_lit]
+        mod #root_namespace_ident {
+            #mod_hierarchy
+        }
+    }
 }
 
 // Add a route to the module tree
