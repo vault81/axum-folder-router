@@ -51,6 +51,20 @@ mod __folder_router__myfolderrouter__examples_advanced_api {
             }
         }
     }
+    #[path = "ping"]
+    pub mod ping {
+        #[path = "route.rs"]
+        pub mod route {
+            use axum::response::Html;
+            use axum::response::IntoResponse;
+            pub async fn get() -> impl IntoResponse {
+                Html("<h1>GET Pong!</h1>").into_response()
+            }
+            pub async fn any() -> impl IntoResponse {
+                Html("<h1>ANY Pong!</h1>").into_response()
+            }
+        }
+    }
     #[path = "users"]
     pub mod users {
         #[path = "route.rs"]
@@ -97,6 +111,16 @@ impl MyFolderRouter {
                     )
                     .post(
                         __folder_router__myfolderrouter__examples_advanced_api::files::route::post,
+                    ),
+            );
+        router = router
+            .route(
+                "/ping",
+                axum::routing::any(
+                        __folder_router__myfolderrouter__examples_advanced_api::ping::route::any,
+                    )
+                    .get(
+                        __folder_router__myfolderrouter__examples_advanced_api::ping::route::get,
                     ),
             );
         router = router

@@ -54,7 +54,7 @@
 //!
 //! ### HTTP Methods
 //!
-//! The macro supports all standard HTTP methods:
+//! The macro supports all standard HTTP methods as defined in RFC9110.
 //! - ```get```
 //! - ```post```
 //! - ```put```
@@ -62,6 +62,11 @@
 //! - ```patch```
 //! - ```head```
 //! - ```options```
+//! - ```trace```
+//! - ```connect```
+//!
+//! And additionally
+//! - ```any```, which maches all methods
 //!
 //! ### Path Parameters
 //!
@@ -189,7 +194,6 @@ impl ModuleDir {
 ///   Cargo manifest directory
 /// * `state_type` - The type name of your application state that will be shared
 ///   across all routes
-///
 #[allow(clippy::missing_panics_doc)]
 #[proc_macro_attribute]
 pub fn folder_router(attr: TokenStream, item: TokenStream) -> TokenStream {
@@ -298,30 +302,41 @@ fn methods_for_route(route_path: &PathBuf) -> Vec<&'static str> {
     };
 
     // Define HTTP methods we're looking for
-    let methods = ["get", "post", "put", "delete", "patch", "head", "options"];
+    let allowed_methods = [
+        "any", "get", "post", "put", "delete", "patch", "head", "options", "trace", "connect",
+    ];
     let mut found_methods = Vec::new();
 
-    // Examine each item in the file
+    // Collect all pub & async fn's
     for item in &file.items {
         if let Item::Fn(fn_item) = item {
             let fn_name = fn_item.sig.ident.to_string();
 
             // Check if the function name is one of our HTTP methods
-            if let Some(&method) = methods.iter().find(|&&m| m == fn_name) {
-                // Check if the function is public
-                let is_public = matches!(fn_item.vis, Visibility::Public(_));
+            // if let Some(&method) = methods.iter().find(|&&m| m == fn_name) {
+            // Check if the function is public
+            let is_public = matches!(fn_item.vis, Visibility::Public(_));
 
-                // Check if the function is async
-                let is_async = fn_item.sig.asyncness.is_some();
+            // Check if the function is async
+            let is_async = fn_item.sig.asyncness.is_some();
 
-                if is_public && is_async {
-                    found_methods.push(method);
-                }
+            if is_public && is_async {
+                found_methods.push(fn_name);
             }
+            // }
         }
     }
 
-    found_methods
+    // Iterate through methods to ensure consistent order
+    allowed_methods
+        .into_iter()
+        .filter(|elem| {
+            found_methods
+                .clone()
+                .into_iter()
+                .any(|method| method == *elem)
+        })
+        .collect()
 }
 
 fn route_registrations(
