@@ -123,7 +123,7 @@
 //! - **Expects seperate directory**: To make rust-analyzer & co work correctly the macro imports all route.rs files inside the given directory tree.
 //!   It is highly recommended to keep the route directory seperate from the rest of your module-tree.
 use std::{
-    collections::HashMap,
+    collections::BTreeMap,
     fmt::Write,
     fs,
     path::{Path, PathBuf},
@@ -131,6 +131,7 @@ use std::{
 
 use proc_macro::TokenStream;
 use quote::{format_ident, quote};
+use regex::Regex;
 use syn::{
     Ident,
     Item,
@@ -143,6 +144,7 @@ use syn::{
     parse_macro_input,
 };
 
+#[derive(Debug)]
 struct FolderRouterArgs {
     path: String,
     state_type: Ident,
@@ -166,7 +168,7 @@ impl Parse for FolderRouterArgs {
 struct ModuleDir {
     name: String,
     has_route: bool,
-    children: HashMap<String, ModuleDir>,
+    children: BTreeMap<String, ModuleDir>,
 }
 
 impl ModuleDir {
@@ -174,7 +176,7 @@ impl ModuleDir {
         ModuleDir {
             name: name.to_string(),
             has_route: false,
-            children: HashMap::new(),
+            children: BTreeMap::new(),
         }
     }
 }
@@ -192,6 +194,7 @@ impl ModuleDir {
 /// This will scan all `route.rs` files in the `./src/api` directory and its
 /// subdirectories, automatically mapping their path structure to URL routes
 /// with the specified state type.
+#[allow(clippy::missing_panics_doc)]
 #[proc_macro_attribute]
 pub fn folder_router(attr: TokenStream, item: TokenStream) -> TokenStream {
     let args = parse_macro_input!(attr as FolderRouterArgs);
@@ -201,19 +204,42 @@ pub fn folder_router(attr: TokenStream, item: TokenStream) -> TokenStream {
     let base_path = args.path;
     let state_type = args.state_type;
 
-    // Get the project root directory
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or("./".to_string());
+    let manifest_dir = {
+        // Get the project root directory
+        let dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or("./".to_string());
+
+        // Create regex to match macrotest pattern with exactly 42 alphanumeric chars
+        // This is the only way to enable us to reference the example route folders in
+        // our macrotest::expand tests
+        let re = Regex::new(r"^(.+)/target/tests/axum-folder-router/[A-Za-z0-9]{42}$").unwrap();
+
+        // If the pattern matches, extract the real project root
+        // Being extra caucious to warn any users about this unexpected Workaround
+        if let Some(captures) = re.captures(&dir) {
+            #[cfg(not(debug_assertions))]
+            return TokenStream::from(quote! {
+                compile_error!("axum-folder-router: MACROTEST_WORKAROUND compiled in non-debug env, something is likely wrong!");
+            });
+            captures.get(1).unwrap().as_str().to_string()
+        } else {
+            dir
+        }
+    };
+
     let base_dir = Path::new(&manifest_dir).join(&base_path);
 
     // Collect route files
     let mut routes = Vec::new();
     collect_route_files(&base_dir, &base_dir, &mut routes);
 
+    // ensures deterministic macro output
+    routes.sort();
+
     if routes.is_empty() {
         return TokenStream::from(quote! {
-            compile_error!(concat!("No route.rs files found in the specified directory: ",
+            compile_error!(concat!("No route.rs files found in the specified directory: '",
                 #base_path,
-                ". Make sure the path is correct and contains route.rs files."
+                "'. Make sure the path is correct and contains route.rs files."
             ));
         });
     }
@@ -258,8 +284,8 @@ pub fn folder_router(attr: TokenStream, item: TokenStream) -> TokenStream {
         if method_registrations.is_empty() {
             return TokenStream::from(quote! {
                 compile_error!(concat!("No routes defined in '",
-                    #base_path
-                    "', make sure to define at least one `pub async fn` named after an method. (E.g. get, post, put, delete)"
+                    #base_path,
+                    "', make sure to define at least one `pub async fn` named after an method. (e.g. get, post, put, delete)"
                 ));
             });
         }

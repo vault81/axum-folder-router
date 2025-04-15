@@ -1,0 +1,7 @@
+error: No route.rs files found in the specified directory: 'some/non/existing/directory'. Make sure the path is correct and contains route.rs files.
+ --> tests/failures/no_files.rs:6:1
+  |
+6 | #[folder_router("some/non/existing/directory", AppState)]
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: this error originates in the attribute macro `folder_router` (in Nightly builds, run with -Z macro-backtrace for more info)

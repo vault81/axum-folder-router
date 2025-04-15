@@ -1,0 +1,7 @@
+error: No routes defined in '../../../../tests/failures/no_routes', make sure to define at least one `pub async fn` named after an method. (e.g. get, post, put, delete)
+ --> tests/failures/no_routes.rs:6:1
+  |
+6 | #[folder_router("../../../../tests/failures/no_routes", AppState)]
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: this error originates in the attribute macro `folder_router` (in Nightly builds, run with -Z macro-backtrace for more info)

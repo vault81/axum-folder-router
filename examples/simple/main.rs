@@ -1,21 +1,17 @@
 use axum::Router;
 use axum_folder_router::folder_router;
 
-#[derive(Clone, Debug)]
-struct AppState {
-    _foo: String,
-}
+#[derive(Clone)]
+struct AppState;
 
-// Imports route.rs files & generates an init fn
+// Imports route.rs files & generates an ::into_router() fn
 #[folder_router("./examples/simple/api", AppState)]
 struct MyFolderRouter();
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     // Create app state
-    let app_state = AppState {
-        _foo: String::new(),
-    };
+    let app_state = AppState;
 
     // Use the init fn generated above
     let folder_router: Router<AppState> = MyFolderRouter::into_router();

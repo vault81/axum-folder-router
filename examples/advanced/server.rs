@@ -6,7 +6,7 @@ struct AppState {
     _foo: String,
 }
 
-// Imports route.rs files & generates an init fn
+// Imports route.rs files & generates an ::into_router() fn
 #[folder_router("examples/advanced/api", AppState)]
 struct MyFolderRouter();
 
