@@ -6,6 +6,14 @@ All notable changes to this project will be documented in this file.
 
 - No changes yet
 
+## [0.3.3] - 2025-04-15
+
+### Added
+- Add support for remaining HTTP methods
+  - we no support the full set as defined by rfc9110
+  - trace & connect were missing specifically
+- Add support for `any` axum router method (default method router, others will take precedence)
+
 ## [0.3.2] - 2025-04-15
 - Refactor internals
 - Add solid testing
