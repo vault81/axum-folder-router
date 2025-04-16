@@ -4,7 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+- Nothing yet
+
+## [0.3.4] - 2025-04-16
+
 - Refactored huge lib.rs into 3 seperate files.
+- Downgraded edition to 2021 for better compatability
 
 ## [0.3.3] - 2025-04-15
 
