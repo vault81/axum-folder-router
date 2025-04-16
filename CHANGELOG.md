@@ -6,6 +6,10 @@ All notable changes to this project will be documented in this file.
 
 - Nothing yet
 
+## [0.3.5] - 2025-04-16
+
+- Moved macrotest to dev deps
+
 ## [0.3.4] - 2025-04-16
 
 - Refactored huge lib.rs into 3 seperate files.
