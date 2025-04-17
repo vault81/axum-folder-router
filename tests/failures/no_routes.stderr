@@ -1,5 +1,5 @@
 error: No routes defined in your route.rs's !
-       ensure that at least one `pub async fn` named after an HTTP verb is defined. (e.g. get, post, put, delete)
+       Ensure that at least one `pub async fn` named after an HTTP verb is defined. (e.g. get, post, put, delete)
  --> tests/failures/no_routes.rs:6:1
   |
 6 | #[folder_router("../../../../tests/failures/no_routes", AppState)]

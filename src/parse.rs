@@ -4,14 +4,14 @@ use std::{
 };
 
 use syn::{
+    parse::{Parse, ParseStream},
+    parse_file,
     Ident,
     Item,
     LitStr,
     Result,
     Token,
     Visibility,
-    parse::{Parse, ParseStream},
-    parse_file,
 };
 
 #[derive(Debug)]

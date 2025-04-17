@@ -172,36 +172,37 @@ pub fn route_registrations(
 
         let method_registrations = methods_for_route(route_path);
 
-        if method_registrations.is_empty() {
-            return quote! {
-                compile_error!(concat!(
-                    "No routes defined in your route.rs's !\n",
-                    "ensure that at least one `pub async fn` named after an HTTP verb is defined. (e.g. get, post, put, delete)"
-                ));
+        if !method_registrations.is_empty() {
+            let first_method = &method_registrations[0];
+            let first_method_ident = format_ident!("{}", first_method);
+
+            let mod_path_tokens = generate_mod_path_tokens(&mod_path);
+
+            let mut builder = quote! {
+                axum::routing::#first_method_ident(#root_namespace_ident::#mod_path_tokens::#first_method_ident)
             };
-        }
 
-        let first_method = &method_registrations[0];
-        let first_method_ident = format_ident!("{}", first_method);
+            for method in &method_registrations[1..] {
+                let method_ident = format_ident!("{}", method);
 
-        let mod_path_tokens = generate_mod_path_tokens(&mod_path);
+                builder = quote! {
+                    #builder.#method_ident(#root_namespace_ident::#mod_path_tokens::#method_ident)
+                };
+            }
 
-        let mut builder = quote! {
-            axum::routing::#first_method_ident(#root_namespace_ident::#mod_path_tokens::#first_method_ident)
-        };
-
-        for method in &method_registrations[1..] {
-            let method_ident = format_ident!("{}", method);
-
-            builder = quote! {
-                #builder.#method_ident(#root_namespace_ident::#mod_path_tokens::#method_ident)
+            let registration = quote! {
+                router = router.route(#axum_path, #builder);
             };
+            route_registrations.push(registration);
         }
-
-        let registration = quote! {
-            router = router.route(#axum_path, #builder);
+    }
+    if route_registrations.is_empty() {
+        return quote! {
+            compile_error!(concat!(
+                "No routes defined in your route.rs's !\n",
+                "Ensure that at least one `pub async fn` named after an HTTP verb is defined. (e.g. get, post, put, delete)"
+            ));
         };
-        route_registrations.push(registration);
     }
 
     TokenStream::from_iter(route_registrations)
