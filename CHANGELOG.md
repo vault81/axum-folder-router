@@ -6,6 +6,10 @@ All notable changes to this project will be documented in this file.
 
 - Nothing yet
 
+## [0.3.6] - 2025-04-17
+
+- Better error messages when having route.rs files with invalid code
+
 ## [0.3.5] - 2025-04-16
 
 - Moved macrotest to dev deps
