@@ -15,6 +15,8 @@
 //! axum = "0.8"
 //! ```
 //!
+//! Add the [build script](#build-script) so the macro can pick up newly created routes.
+//!
 //! ## Basic Usage
 //!
 //! The macro scans a directory for ```route.rs``` files and automatically
@@ -66,7 +68,7 @@
 //! - ```connect```
 //!
 //! And additionally
-//! - ```any```, which maches all methods
+//! - ```any```, which matches all methods
 //!
 //! ### Path Parameters
 //!
@@ -125,8 +127,22 @@
 //! ## Limitations
 //!
 //! - **Compile-time Only**: The routing is determined at compile time, so dynamic route registration isn't supported.
-//! - **Expects seperate directory**: To make rust-analyzer & co work correctly the macro imports all route.rs files inside the given directory tree.
-//!   It is highly recommended to keep the route directory seperate from the rest of your module-tree.
+//! - **Expects separate directory**: To make rust-analyzer & co work correctly the macro imports all route.rs files inside the given directory tree.
+//!   It is highly recommended to keep the route directory separate from the rest of your module-tree.
+//! 
+//! ## Build script
+//!
+//! For the macro to pick up newly created routes, add the following `build.rs` to the project root folder:
+//! ```rust
+//! fn main() {
+//!    // Watch axum-folder-router routes folder, so it picks up new routes
+//!    println!(
+//!        "cargo:rerun-if-changed={routes_folder}",
+//!        routes_folder = "my/routes"  // Replace with your actual routes directory
+//!    );
+//!}
+//! ```
+//!
 use std::path::Path;
 
 use proc_macro::TokenStream;
