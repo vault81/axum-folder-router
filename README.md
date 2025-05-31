@@ -6,7 +6,7 @@
 
 # axum-folder-router
 
-```#[folder_router(...)]``` is a procedural attribute macro for the Axum web framework that automatically generates router boilerplate based on your direcory & file structure. 
+```#[folder_router(...)]``` is a procedural attribute macro for the Axum web framework that automatically generates router boilerplate based on your directory & file structure. 
 Inspired by popular frameworks like next.js.
 
 ## Features
