@@ -170,7 +170,19 @@ pub fn route_registrations(
         // Generate module path and axum path
         let (axum_path, mod_path) = path_to_module_path(rel_path);
 
+        #[cfg(feature = "debug")]
+        println!(
+            "/// [folder_router] Found route.rs for axum_path: {:?}, mod_path: {:?}",
+            axum_path, mod_path
+        );
+
         let method_registrations = methods_for_route(route_path);
+
+        #[cfg(feature = "debug")]
+        println!(
+            "/// [folder_router] Found methods for axum_path: {:?}, mod_path: {:?}, methods: {:?}",
+            axum_path, mod_path, method_registrations
+        );
 
         if !method_registrations.is_empty() {
             let first_method = &method_registrations[0];

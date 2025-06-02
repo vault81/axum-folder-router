@@ -165,6 +165,12 @@ mod parse;
 #[allow(clippy::missing_panics_doc)]
 #[proc_macro_attribute]
 pub fn folder_router(attr: TokenStream, item: TokenStream) -> TokenStream {
+    #[cfg(feature = "debug")]
+    println!(
+        "/// [folder_router] Running folder_router macro attrs:({}) item: {}",
+        attr, item
+    );
+
     let args = parse_macro_input!(attr as parse::FolderRouterArgs);
     let input_item = parse_macro_input!(item as syn::ItemStruct);
     let struct_name = &input_item.ident;
