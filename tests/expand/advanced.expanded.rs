@@ -42,10 +42,9 @@ mod __folder_router__myfolderrouter__examples_advanced_api {
                 use axum::{extract::Path, response::IntoResponse};
                 pub async fn get(Path(path): Path<String>) -> impl IntoResponse {
                     ::alloc::__export::must_use({
-                        let res = ::alloc::fmt::format(
+                        ::alloc::fmt::format(
                             format_args!("Requested file path: {0}", path),
-                        );
-                        res
+                        )
                     })
                 }
             }
@@ -84,8 +83,7 @@ mod __folder_router__myfolderrouter__examples_advanced_api {
                 use axum::{extract::Path, response::IntoResponse};
                 pub async fn get(Path(id): Path<String>) -> impl IntoResponse {
                     ::alloc::__export::must_use({
-                        let res = ::alloc::fmt::format(format_args!("User ID: {0}", id));
-                        res
+                        ::alloc::fmt::format(format_args!("User ID: {0}", id))
                     })
                 }
             }
