@@ -1,6 +1,6 @@
 //! # ```axum_folder_router``` Macro Documentation
 //!
-//! [macro@folder_router] is a procedural macro for the Axum web framework that
+//! [`macro@folder_router`] is a procedural macro for the Axum web framework that
 //! automatically generates router boilerplate based on your file structure. It
 //! simplifies route organization by using filesystem conventions to define your
 //! API routes.
