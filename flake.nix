@@ -3,7 +3,6 @@
   nixConfig = {
     extra-substituters = [
       "https://nixcache.vlt81.de"
-      "https://cuda-maintainers.cachix.org"
     ];
     extra-trusted-public-keys = [
       "nixcache.vlt81.de:nw0FfUpePtL6P3IMNT9X6oln0Wg9REZINtkkI9SisqQ="
@@ -76,34 +75,16 @@
               cargo-expand
               calc
               fish
-              inotify-tools
-              mold
               pkg-config
-              sccache
               unzip
             ]
             ++ buildInputs;
 
           buildInputs = buildInputs;
           shellHook = ''
-            # export NIX_LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath buildInputs}:$NIX_LD_LIBRARY_PATH
             export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath buildInputs}"
             export MALLOC_CONF=thp:always,metadata_thp:always
           '';
         };
-        packages = {
-          # default = pkgs.callPackage ./package.nix { };
-        };
-      })
-    // {
-      hydraJobs =
-        let
-          system = "x86_64-linux";
-          # packages = self.packages."${system}";
-          devShells = self.devShells."${system}";
-        in
-        {
-          inherit devShells;
-        };
-    };
+      });
 }
