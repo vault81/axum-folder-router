@@ -1,9 +1,9 @@
 //! # ```axum_folder_router``` Macro Documentation
 //!
-//! [`macro@folder_router`] is a procedural macro for the Axum web framework that
-//! automatically generates router boilerplate based on your file structure. It
-//! simplifies route organization by using filesystem conventions to define your
-//! API routes.
+//! [`macro@folder_router`] is a procedural macro for the Axum web framework
+//! that automatically generates router boilerplate based on your file
+//! structure. It simplifies route organization by using filesystem conventions
+//! to define your API routes.
 //!
 //! ## Installation
 //!
@@ -143,7 +143,6 @@
 //! [dependencies]
 //! axum_folder_router = { version = "0.3", features = ["nightly"] }
 //! ```
-//!
 //! This enables us to use the unstable [`track_path`](https://doc.rust-lang.org/beta/unstable-book/library-features/track-path.html) API to tell cargo to watch for changes in your route directories.
 //!
 //! #### Stable Rust (requires `build.rs`)
