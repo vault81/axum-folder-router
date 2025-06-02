@@ -1,3 +1,12 @@
+/// [folder_router] Running folder_router macro attrs:("examples/simple/api", AppState) item: struct MyFolderRouter();
+/// [folder_router] Tracking path: "/home/tristand/code/axum-folder-router/examples/simple/api"
+/// [folder_router] Found route.rs for axum_path: "/", mod_path: ["route"]
+/// [folder_router] Found methods for axum_path: "/", mod_path: ["route"], methods: ["get"]
+#![feature(prelude_import)]
+#[prelude_import]
+use std::prelude::rust_2021::*;
+#[macro_use]
+extern crate std;
 use axum_folder_router::folder_router;
 struct AppState;
 #[automatically_derived]
