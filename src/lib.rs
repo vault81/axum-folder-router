@@ -15,8 +15,8 @@
 //! axum = "0.8"
 //! ```
 //!
-//! Add the [build script](#build-script) so the macro can pick up newly created
-//! routes.
+//! See [Avoiding Cache Issues](#avoiding-cache-issues) on how to fix cargos
+//! caching, which may cause new ```route.rs``` files to be ignored.
 //!
 //! ## Basic Usage
 //!
@@ -130,13 +130,28 @@
 //! - **Compile-time Only**: The routing is determined at compile time, so dynamic route registration isn't supported.
 //! - **Expects separate directory**: To make rust-analyzer & co work correctly the macro imports all route.rs files inside the given directory tree.
 //!   It is highly recommended to keep the route directory separate from the rest of your module-tree.
+//! - **Cargo's build-in caching may ignore newly created route.rs files**: See [Avoiding Cache Issues](#avoiding-cache-issues)
 //!
-//! ## Build script
+//! ### Avoiding Cache Issues
 //!
-//! For the macro to pick up newly created routes, add the following `build.rs` to the project root folder:
+//! By default newly created route.rs files may be ignored due to cargo's build-in caching.
+//!
+//! #### Nightly Rust
+//!
+//! If you're using a nightly toolchain, just enable the `nightly` feature.
+//! ```toml
+//! [dependencies]
+//! axum_folder_router = { version = "0.3", features = ["nightly"] }
+//! ```
+//!
+//! This enables us to use the unstable [`track_path`](https://doc.rust-lang.org/beta/unstable-book/library-features/track-path.html) API to tell cargo to watch for changes in your route directories.
+//!
+//! #### Stable Rust (requires `build.rs`)
+//!
+//! On stable, you'll need to add this `build.rs` to your project root:
 //! ```rust
 //! fn main() {
-//!    // Watch axum-folder-router routes folder, so it picks up new routes
+//!    // Watch routes folder, so it picks up new routes
 //!    println!(
 //!        "cargo:rerun-if-changed={routes_folder}",
 //!        routes_folder = "my/routes" // Replace with your actual routes dir
