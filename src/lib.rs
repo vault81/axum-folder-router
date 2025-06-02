@@ -144,8 +144,13 @@
 //! }
 //! ```
 //!
+
+#![cfg_attr(feature = "nightly", feature(track_path))]
+
 use std::path::Path;
 
+#[cfg(feature = "nightly")]
+use proc_macro::tracked_path;
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::parse_macro_input;
@@ -180,6 +185,13 @@ pub fn folder_router(attr: TokenStream, item: TokenStream) -> TokenStream {
 
     let manifest_dir = get_manifest_dir();
     let base_dir = Path::new(&manifest_dir).join(&base_path);
+
+    #[cfg(feature = "nightly")]
+    {
+        #[cfg(feature = "debug")]
+        println!("/// [folder_router] Tracking path: {:?}", base_dir);
+        tracked_path::path(base_dir.to_str().unwrap());
+    }
 
     let mod_namespace = format!(
         "__folder_router__{}__{}",
