@@ -6,6 +6,10 @@ All notable changes to this project will be documented in this file.
 
 - Nothing yet
 
+## [0.3.7] - 2025-06-02
+
+- Add docs for rerun-if-changed in build.rs so new routes are picked up when compiling with cache (Thanks to @imbolc)
+
 ## [0.3.6] - 2025-04-17
 
 - Better error messages when having route.rs files with invalid code
