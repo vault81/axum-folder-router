@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file.
 
 - Nothing yet
 
+## [0.3.9] - 2025-06-04
+
+- Refactored the internals a bit
+- Reworded some docs
+
 ## [0.3.8] - 2025-06-02
 
 - Add `nightly` feature to fix caching issues without build.rs via [`track_path`](https://doc.rust-lang.org/beta/unstable-book/library-features/track-path.html) unstable API.
