@@ -3,6 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use quote::ToTokens;
 use syn::{
     parse::{Parse, ParseStream},
     parse_file,
@@ -20,6 +21,35 @@ pub struct FolderRouterArgs {
     pub state_type: Ident,
 }
 
+impl FolderRouterArgs {
+    pub fn abs_norm_path(&self) -> PathBuf {
+        let base_path = self.path.clone();
+
+        let manifest_dir = Self::get_manifest_dir();
+        let base_dir = Path::new(&manifest_dir).join(&base_path);
+
+        base_dir
+    }
+
+    // This is a workaround for macrotest behaviour
+    #[cfg(debug_assertions)]
+    fn get_manifest_dir() -> String {
+        use regex::Regex;
+        let dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or("./".to_string());
+        let re = Regex::new(r"^(.+)/target/tests/axum-folder-router/[A-Za-z0-9]{42}$").unwrap();
+
+        if let Some(captures) = re.captures(&dir) {
+            captures.get(1).unwrap().as_str().to_string()
+        } else {
+            dir
+        }
+    }
+
+    #[cfg(not(debug_assertions))]
+    fn get_manifest_dir() -> String {
+        std::env::var("CARGO_MANIFEST_DIR").unwrap_or("./".to_string())
+    }
+}
 impl Parse for FolderRouterArgs {
     fn parse(input: ParseStream) -> Result<Self> {
         let path_lit = input.parse::<LitStr>()?;
@@ -95,4 +125,77 @@ pub fn collect_route_files(base_dir: &Path, dir: &Path) -> Vec<(PathBuf, PathBuf
     }
     routes.sort();
     routes
+}
+
+pub struct FolderRouterItem {
+    item: syn::ItemStruct,
+}
+
+impl FolderRouterItem {
+    pub fn module_namespace(&self) -> syn::Path {
+        syn::parse_str(&format!(
+            "__folder_router__{}",
+            self.item
+                .ident
+                .to_string()
+                .chars()
+                .map(|c| if c.is_alphanumeric() { c } else { '_' })
+                .map(|c| c.to_ascii_lowercase())
+                .collect::<String>(),
+        ))
+        .unwrap()
+    }
+
+    pub fn struct_name(&self) -> syn::Ident {
+        self.item.ident.clone()
+    }
+}
+
+impl Parse for FolderRouterItem {
+    fn parse(input: ParseStream) -> Result<Self> {
+        let item: syn::ItemStruct = input.parse()?;
+
+        Ok(Self {
+            item,
+        })
+    }
+}
+
+impl ToTokens for FolderRouterItem {
+    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+        self.item.to_tokens(tokens);
+    }
+}
+
+pub struct FolderRouterRoutes {
+    routes: Vec<(PathBuf, PathBuf)>,
+}
+
+impl FolderRouterRoutes {
+    pub fn parse_from_path(errors: &mut proc_macro2::TokenStream, path: &Path) -> Self {
+        let routes = collect_route_files(path, path);
+        let path = path.to_str().unwrap();
+
+        if routes.is_empty() {
+            errors.extend(quote::quote! {
+                compile_error!(concat!("No route.rs files found in the specified directory: '",
+                    #path,
+                    "'. Make sure the path is correct and contains route.rs files."
+                ));
+            });
+        }
+
+        Self {
+            routes,
+        }
+    }
+}
+
+impl IntoIterator for &FolderRouterRoutes {
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+    type Item = (std::path::PathBuf, std::path::PathBuf);
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.routes.clone().into_iter()
+    }
 }

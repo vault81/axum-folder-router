@@ -30,8 +30,9 @@ impl ::core::clone::Clone for AppState {
         }
     }
 }
+struct MyFolderRouter();
 #[path = "/home/tristand/code/axum-folder-router/examples/advanced/api"]
-mod __folder_router__myfolderrouter__examples_advanced_api {
+mod __folder_router__myfolderrouter {
     #[path = "route.rs"]
     pub mod route {
         use axum::response::{Html, IntoResponse};
@@ -109,7 +110,6 @@ mod __folder_router__myfolderrouter__examples_advanced_api {
         }
     }
 }
-struct MyFolderRouter();
 impl MyFolderRouter {
     pub fn into_router() -> axum::Router<AppState> {
         let mut router = axum::Router::new();
@@ -117,55 +117,39 @@ impl MyFolderRouter {
             .route(
                 "/files/{*path}",
                 axum::routing::get(
-                    __folder_router__myfolderrouter__examples_advanced_api::files::___path::route::get,
+                    __folder_router__myfolderrouter::files::___path::route::get,
                 ),
             );
         router = router
             .route(
                 "/files",
-                axum::routing::get(
-                        __folder_router__myfolderrouter__examples_advanced_api::files::route::get,
-                    )
-                    .post(
-                        __folder_router__myfolderrouter__examples_advanced_api::files::route::post,
-                    ),
+                axum::routing::get(__folder_router__myfolderrouter::files::route::get)
+                    .post(__folder_router__myfolderrouter::files::route::post),
             );
         router = router
             .route(
                 "/ping",
-                axum::routing::any(
-                        __folder_router__myfolderrouter__examples_advanced_api::ping::route::any,
-                    )
-                    .get(
-                        __folder_router__myfolderrouter__examples_advanced_api::ping::route::get,
-                    ),
+                axum::routing::any(__folder_router__myfolderrouter::ping::route::any)
+                    .get(__folder_router__myfolderrouter::ping::route::get),
             );
         router = router
             .route(
                 "/",
-                axum::routing::get(
-                        __folder_router__myfolderrouter__examples_advanced_api::route::get,
-                    )
-                    .post(
-                        __folder_router__myfolderrouter__examples_advanced_api::route::post,
-                    ),
+                axum::routing::get(__folder_router__myfolderrouter::route::get)
+                    .post(__folder_router__myfolderrouter::route::post),
             );
         router = router
             .route(
                 "/users/{:id}",
                 axum::routing::get(
-                    __folder_router__myfolderrouter__examples_advanced_api::users::__id::route::get,
+                    __folder_router__myfolderrouter::users::__id::route::get,
                 ),
             );
         router = router
             .route(
                 "/users",
-                axum::routing::get(
-                        __folder_router__myfolderrouter__examples_advanced_api::users::route::get,
-                    )
-                    .post(
-                        __folder_router__myfolderrouter__examples_advanced_api::users::route::post,
-                    ),
+                axum::routing::get(__folder_router__myfolderrouter::users::route::get)
+                    .post(__folder_router__myfolderrouter::users::route::post),
             );
         router
     }

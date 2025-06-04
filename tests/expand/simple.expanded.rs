@@ -16,8 +16,9 @@ impl ::core::clone::Clone for AppState {
         AppState
     }
 }
+struct MyFolderRouter();
 #[path = "/home/tristand/code/axum-folder-router/examples/simple/api"]
-mod __folder_router__myfolderrouter__examples_simple_api {
+mod __folder_router__myfolderrouter {
     #[path = "route.rs"]
     pub mod route {
         use axum::response::{Html, IntoResponse};
@@ -26,17 +27,11 @@ mod __folder_router__myfolderrouter__examples_simple_api {
         }
     }
 }
-struct MyFolderRouter();
 impl MyFolderRouter {
     pub fn into_router() -> axum::Router<AppState> {
         let mut router = axum::Router::new();
         router = router
-            .route(
-                "/",
-                axum::routing::get(
-                    __folder_router__myfolderrouter__examples_simple_api::route::get,
-                ),
-            );
+            .route("/", axum::routing::get(__folder_router__myfolderrouter::route::get));
         router
     }
 }

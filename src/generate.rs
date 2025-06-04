@@ -1,10 +1,10 @@
 use std::{collections::BTreeMap, fmt::Write, path::Path};
 
 use proc_macro2::TokenStream;
-use quote::{format_ident, quote};
+use quote::{format_ident, quote, ToTokens};
 use syn::LitStr;
 
-use crate::parse::methods_for_route;
+use crate::parse::{self, methods_for_route};
 
 // A struct representing a directory in the module tree
 #[derive(Debug)]
@@ -159,16 +159,15 @@ fn generate_module_hierarchy(dir: &ModuleDir) -> TokenStream {
     result
 }
 
-pub fn route_registrations(
-    root_namespace_str: &str,
-    routes: &Vec<(std::path::PathBuf, std::path::PathBuf)>,
+fn route_registrations(
+    errors: &mut TokenStream,
+    mod_namespace: &syn::Path,
+    routes: &parse::FolderRouterRoutes,
 ) -> TokenStream {
-    let root_namespace_ident = format_ident!("{}", root_namespace_str);
-
-    let mut route_registrations = Vec::new();
+    let mut route_method_registrations = Vec::new();
     for (route_path, rel_path) in routes {
         // Generate module path and axum path
-        let (axum_path, mod_path) = path_to_module_path(rel_path);
+        let (axum_path, mod_path) = path_to_module_path(&rel_path);
 
         #[cfg(feature = "debug")]
         println!(
@@ -176,7 +175,7 @@ pub fn route_registrations(
             axum_path, mod_path
         );
 
-        let method_registrations = methods_for_route(route_path);
+        let method_registrations = methods_for_route(&route_path);
 
         #[cfg(feature = "debug")]
         println!(
@@ -191,55 +190,78 @@ pub fn route_registrations(
             let mod_path_tokens = generate_mod_path_tokens(&mod_path);
 
             let mut builder = quote! {
-                axum::routing::#first_method_ident(#root_namespace_ident::#mod_path_tokens::#first_method_ident)
+                axum::routing::#first_method_ident(#mod_namespace::#mod_path_tokens::#first_method_ident)
             };
 
             for method in &method_registrations[1..] {
                 let method_ident = format_ident!("{}", method);
 
                 builder = quote! {
-                    #builder.#method_ident(#root_namespace_ident::#mod_path_tokens::#method_ident)
+                    #builder.#method_ident(#mod_namespace::#mod_path_tokens::#method_ident)
                 };
             }
 
             let registration = quote! {
                 router = router.route(#axum_path, #builder);
             };
-            route_registrations.push(registration);
+            route_method_registrations.push(registration);
         }
     }
-    if route_registrations.is_empty() {
-        return quote! {
+    if route_method_registrations.is_empty() {
+        errors.extend(quote! {
             compile_error!(concat!(
                 "No routes defined in your route.rs's !\n",
                 "Ensure that at least one `pub async fn` named after an HTTP verb is defined. (e.g. get, post, put, delete)"
             ));
-        };
+        });
     }
 
-    TokenStream::from_iter(route_registrations)
+    TokenStream::from_iter(route_method_registrations)
+}
+
+pub fn router_impl(
+    errors: &mut TokenStream,
+    args: &parse::FolderRouterArgs,
+    item: &parse::FolderRouterItem,
+    routes: &parse::FolderRouterRoutes,
+) -> TokenStream {
+    let struct_name = item.struct_name();
+    let state_type = args.state_type.clone();
+    let registrations = route_registrations(errors, &item.module_namespace(), routes);
+
+    quote! {
+        impl #struct_name {
+            pub fn into_router() -> axum::Router<#state_type> {
+                let mut router = axum::Router::new();
+                #registrations
+                router
+            }
+        }
+    }
 }
 
 pub fn module_tree(
-    root_namespace_str: &str,
-    base_dir: &Path,
-    routes: &Vec<(std::path::PathBuf, std::path::PathBuf)>,
+    args: &parse::FolderRouterArgs,
+    item: &parse::FolderRouterItem,
+    routes: &parse::FolderRouterRoutes,
 ) -> TokenStream {
-    let root_namespace_ident = format_ident!("{}", root_namespace_str);
     let base_path_lit = LitStr::new(
-        base_dir.to_str().unwrap_or("./"),
+        args.abs_norm_path().as_path().to_str().unwrap(),
         proc_macro2::Span::call_site(),
     );
 
-    let mut root = ModuleDir::new(root_namespace_str);
+    let mod_namespace = item.module_namespace();
+
+    let mod_str = mod_namespace.to_token_stream().to_string();
+    let mut root = ModuleDir::new(&mod_str);
     for (route_path, rel_path) in routes {
-        root.add_to_module_tree(rel_path, route_path);
+        root.add_to_module_tree(&rel_path, &route_path);
     }
 
     let mod_hierarchy = generate_module_hierarchy(&root);
     quote! {
         #[path = #base_path_lit]
-        mod #root_namespace_ident {
+        mod #mod_namespace {
             #mod_hierarchy
         }
     }
