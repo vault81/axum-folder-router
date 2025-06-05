@@ -171,42 +171,43 @@ fn route_registrations(
 
         #[cfg(feature = "debug")]
         println!(
-            "/// [folder_router] Found route.rs for axum_path: {:?}, mod_path: {:?}",
-            axum_path, mod_path
+            "/// [folder_router] Found route.rs for file: {:?}, path: {:?}, mod_path: {:?}",
+            rel_path, axum_path, mod_path
         );
 
         let method_registrations = methods_for_route(&route_path);
 
-        #[cfg(feature = "debug")]
-        println!(
-            "/// [folder_router] Found methods for axum_path: {:?}, mod_path: {:?}, methods: {:?}",
-            axum_path, mod_path, method_registrations
-        );
-
         if !method_registrations.is_empty() {
-            let first_method = &method_registrations[0];
-            let first_method_ident = format_ident!("{}", first_method);
+            #[cfg(feature = "debug")]
+            println!(
+                "/// [folder_router] Found methods for file: {:?}, path: {:?}, mod_path: {:?}, \
+                 methods: {:?}",
+                rel_path, axum_path, mod_path, method_registrations
+            );
+
+            let first_method = format_ident!("{}", method_registrations[0]);
 
             let mod_path_tokens = generate_mod_path_tokens(&mod_path);
 
-            let mut builder = quote! {
-                axum::routing::#first_method_ident(#mod_namespace::#mod_path_tokens::#first_method_ident)
+            let mut method_router = quote! {
+                axum::routing::#first_method(#mod_namespace::#mod_path_tokens::#first_method)
             };
 
             for method in &method_registrations[1..] {
-                let method_ident = format_ident!("{}", method);
+                let next_method = format_ident!("{}", method);
 
-                builder = quote! {
-                    #builder.#method_ident(#mod_namespace::#mod_path_tokens::#method_ident)
+                method_router = quote! {
+                    #method_router.#next_method(#mod_namespace::#mod_path_tokens::#next_method)
                 };
             }
 
             let registration = quote! {
-                router = router.route(#axum_path, #builder);
+                router = router.route(#axum_path, #method_router);
             };
             route_method_registrations.push(registration);
         }
     }
+
     if route_method_registrations.is_empty() {
         errors.extend(quote! {
             compile_error!(concat!(
@@ -215,7 +216,6 @@ fn route_registrations(
             ));
         });
     }
-
     TokenStream::from_iter(route_method_registrations)
 }
 

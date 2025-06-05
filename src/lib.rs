@@ -174,6 +174,8 @@ use syn::parse_macro_input;
 
 mod generate;
 mod parse;
+#[cfg(feature="debug")]
+mod debug;
 
 /// Creates an Axum router module tree & creation function
 /// by scanning a directory for `route.rs` files.
