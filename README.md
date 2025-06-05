@@ -1,8 +1,8 @@
-
 [![Crates.io](https://img.shields.io/crates/v/axum-folder-router)](https://crates.io/crates/axum-folder-router)
 [![Documentation](https://docs.rs/axum-folder-router/badge.svg)](https://docs.rs/axum-folder-router)
 ![Maintenance](https://img.shields.io/badge/maintenance-actively--developed-brightgreen.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
 
 # axum-folder-router
 

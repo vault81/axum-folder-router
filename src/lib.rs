@@ -162,6 +162,7 @@ fn main() {
 }
 ```
 */
+#![forbid(unsafe_code)]
 #![cfg_attr(feature = "nightly", feature(track_path))]
 
 #[cfg(feature = "nightly")]
