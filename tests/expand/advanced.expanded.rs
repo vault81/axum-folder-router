@@ -13,10 +13,10 @@
 /// [folder_router] Found route.rs for file: "users/route.rs", path: "/users", mod_path: ["users", "route"]
 /// [folder_router] Found methods for file: "users/route.rs", path: "/users", mod_path: ["users", "route"], methods: ["get", "post"]
 #![feature(prelude_import)]
-#[prelude_import]
-use std::prelude::rust_2021::*;
 #[macro_use]
 extern crate std;
+#[prelude_import]
+use std::prelude::rust_2021::*;
 use axum_folder_router::folder_router;
 struct AppState {
     _foo: String,

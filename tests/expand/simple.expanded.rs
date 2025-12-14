@@ -3,10 +3,10 @@
 /// [folder_router] Found route.rs for file: "route.rs", path: "/", mod_path: ["route"]
 /// [folder_router] Found methods for file: "route.rs", path: "/", mod_path: ["route"], methods: ["get"]
 #![feature(prelude_import)]
-#[prelude_import]
-use std::prelude::rust_2021::*;
 #[macro_use]
 extern crate std;
+#[prelude_import]
+use std::prelude::rust_2021::*;
 use axum_folder_router::folder_router;
 struct AppState;
 #[automatically_derived]

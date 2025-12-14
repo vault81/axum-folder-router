@@ -3,17 +3,26 @@
   nixConfig = {
     extra-substituters = [
       "https://nixcache.vlt81.de"
+      "https://cuda-maintainers.cachix.org"
+      "https://cache.nixos.org"
+      "https://cache.garnix.io"
     ];
     extra-trusted-public-keys = [
       "nixcache.vlt81.de:nw0FfUpePtL6P3IMNT9X6oln0Wg9REZINtkkI9SisqQ="
+      "llama-cpp.cachix.org-1:H75X+w83wUKTIPSO1KWy9ADUrzThyGs8P5tmAbkWhQc="
+      "cuda-maintainers.cachix.org-1:0dq3bujKpuEPMCX6U4WylrUDZ9JyUG0VpVZa7CNfq5E="
+      "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+      "cache.garnix.io:CTFPyKSLcx5RMJKfLo5EEPUObbA78b0YQ2DTCJXqr9g="
     ];
   };
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     rust-overlay.url = "github:oxalica/rust-overlay";
+    rust-overlay.inputs.nixpkgs.follows = "nixpkgs";
     flake-utils.url = "github:numtide/flake-utils";
     flake-parts.url = "github:hercules-ci/flake-parts";
     devshell.url = "github:numtide/devshell";
+    devshell.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs =
@@ -30,26 +39,31 @@
         overlays = [
           rust-overlay.overlays.default
           devshell.overlays.default
-          (final: prev: {
-            customRustToolchain = prev.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
-          })
         ];
+        customRustToolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
+        config = {
+          allowUnfree = true;
+        };
         pkgs = import nixpkgs {
-          inherit system overlays;
-          config = {
-            allowUnfree = true;
-          };
+          inherit system overlays config;
         };
         buildInputs = with pkgs; [
-          zlib
-          clang
-          libclang
-          gzip
-          coreutils
-          gdb
-          glib
-          glibc
+          # pkgsStatic.zstd
+          # pkgsStatic.zstd
+          # pkgsStatic.zlib   #
+          # gzip              #
+          # gcc
+          # pkgsMusl.musl
+          # pkgsMusl.zstd
+          # clang
+          # libclang
+          # coreutils
+          # gdb
+          # glib
+          # glibc
+          # psm
         ];
+        lib = pkgs.lib;
       in
       {
         devShells.default = pkgs.mkShell {
@@ -57,10 +71,10 @@
             [
               customRustToolchain
               bacon
-              binaryen
               cacert
               cargo-bloat
               cargo-docset
+              cargo-geiger
               cargo-machete
               cargo-limit
               cargo-deny
@@ -76,15 +90,16 @@
               calc
               fish
               pkg-config
-              unzip
             ]
             ++ buildInputs;
 
           buildInputs = buildInputs;
+          MALLOC_CONF = "thp:always,metadata_thp:always";
+          LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath buildInputs}";
+          CARGO_TARGET_X86_64_PC_WINDOWS_GNU_RUSTFLAGS = "-L native=${pkgs.pkgsCross.mingwW64.windows.pthreads}/lib";
+
           shellHook = ''
-            export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath buildInputs}"
-            export MALLOC_CONF=thp:always,metadata_thp:always
-          '';
+        '';
         };
       });
 }
