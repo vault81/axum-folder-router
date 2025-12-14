@@ -43,20 +43,7 @@
           inherit system overlays config;
         };
         buildInputs = with pkgs; [
-          # pkgsStatic.zstd
-          # pkgsStatic.zstd
-          # pkgsStatic.zlib   #
-          # gzip              #
-          # gcc
-          # pkgsMusl.musl
-          # pkgsMusl.zstd
-          # clang
-          # libclang
-          # coreutils
-          # gdb
-          # glib
-          # glibc
-          # psm
+	# add linking deps here
         ];
         lib = pkgs.lib;
       in
