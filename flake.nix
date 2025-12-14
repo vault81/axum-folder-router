@@ -3,16 +3,11 @@
   nixConfig = {
     extra-substituters = [
       "https://nixcache.vlt81.de"
-      "https://cuda-maintainers.cachix.org"
       "https://cache.nixos.org"
-      "https://cache.garnix.io"
     ];
     extra-trusted-public-keys = [
       "nixcache.vlt81.de:nw0FfUpePtL6P3IMNT9X6oln0Wg9REZINtkkI9SisqQ="
-      "llama-cpp.cachix.org-1:H75X+w83wUKTIPSO1KWy9ADUrzThyGs8P5tmAbkWhQc="
-      "cuda-maintainers.cachix.org-1:0dq3bujKpuEPMCX6U4WylrUDZ9JyUG0VpVZa7CNfq5E="
       "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
-      "cache.garnix.io:CTFPyKSLcx5RMJKfLo5EEPUObbA78b0YQ2DTCJXqr9g="
     ];
   };
   inputs = {
