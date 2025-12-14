@@ -100,7 +100,6 @@ dependencies = [
  "axum",
  "glob",
  "macrotest",
- "prettyplease",
  "proc-macro2",
  "quote",
  "regex",

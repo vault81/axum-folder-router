@@ -19,7 +19,7 @@ proc-macro = true
 # Enables use of unstable [`track_path`](https://doc.rust-lang.org/beta/unstable-book/library-features/track-path.html) feature to [avoid cache issues](#avoiding-cache-issues).
 nightly = []
 # Adds some debug logging
-debug = ["dep:prettyplease"]
+debug = []
 default = []
 
 [dependencies]
@@ -28,7 +28,6 @@ quote = "1.0"
 proc-macro2 = "1.0"
 glob = "0.3"
 regex = "1.11"
-prettyplease = { version = "0.2.33", optional = true }
 
 [dev-dependencies]
 anyhow = "1.0.98"
