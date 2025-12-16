@@ -19,7 +19,7 @@ proc-macro = true
 # Enables use of unstable [`track_path`](https://doc.rust-lang.org/beta/unstable-book/library-features/track-path.html) feature to [avoid cache issues](#avoiding-cache-issues).
 nightly = []
 # Adds some debug logging
-debug = []
+debug = ["syn/extra-traits"]
 default = []
 
 [dependencies]

@@ -5,7 +5,7 @@ use axum_folder_router::folder_router;
 struct AppState;
 
 // Imports route.rs files & generates an ::into_router() fn
-#[folder_router("./examples/simple/api", AppState)]
+#[folder_router("./examples/simple/routes.rs", AppState)]
 struct MyFolderRouter();
 
 #[tokio::main]

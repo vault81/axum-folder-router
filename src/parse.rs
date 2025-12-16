@@ -15,7 +15,7 @@ use syn::{
     Visibility,
 };
 
-#[derive(Debug)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 pub struct FolderRouterArgs {
     pub path: String,
     pub state_type: Ident,
@@ -116,33 +116,37 @@ pub fn collect_route_files(base_dir: &Path, dir: &Path) -> Vec<(PathBuf, PathBuf
             if path.is_dir() {
                 let mut nested_routes = collect_route_files(base_dir, &path);
                 routes.append(&mut nested_routes);
-            } else if path.file_name().unwrap_or_default() == "route.rs" {
-                if let Ok(rel_dir) = path.strip_prefix(base_dir) {
-                    routes.push((path.clone(), rel_dir.to_path_buf()));
-                }
+            } else if let Ok(rel_dir) = path.strip_prefix(base_dir) {
+                routes.push((path.clone(), rel_dir.to_path_buf()));
             }
         }
     }
     routes.sort();
+    crate::dbg(format_args!(
+        "Collecting route files base_dir: {}, dir: {}, routes: {routes:?}",
+        base_dir.display(),
+        dir.display()
+    ));
     routes
 }
 
+#[cfg_attr(feature = "debug", derive(Debug))]
 pub struct FolderRouterItem {
     item: syn::ItemStruct,
 }
 
 impl FolderRouterItem {
     pub fn module_namespace(&self) -> syn::Path {
-        syn::parse_str(&format!(
-            "__folder_router__{}",
-            self.item
+        syn::parse_str(
+            &self
+                .item
                 .ident
                 .to_string()
                 .chars()
                 .map(|c| if c.is_alphanumeric() { c } else { '_' })
                 .map(|c| c.to_ascii_lowercase())
                 .collect::<String>(),
-        ))
+        )
         .unwrap()
     }
 
@@ -167,18 +171,19 @@ impl ToTokens for FolderRouterItem {
     }
 }
 
+#[cfg_attr(feature = "debug", derive(Debug))]
 pub struct FolderRouterRoutes {
     routes: Vec<(PathBuf, PathBuf)>,
 }
 
 impl FolderRouterRoutes {
     pub fn parse_from_path(errors: &mut proc_macro2::TokenStream, path: &Path) -> Self {
-        let routes = collect_route_files(path, path);
+        let routes = collect_route_files(path.parent().unwrap(), path.parent().unwrap());
         let path = path.to_str().unwrap();
 
         if routes.is_empty() {
             errors.extend(quote::quote! {
-                compile_error!(concat!("No route.rs files found in the specified directory: '",
+                compile_error!(concat!("No .rs files found in the specified directory: '",
                     #path,
                     "'. Make sure the path is correct and contains route.rs files."
                 ));

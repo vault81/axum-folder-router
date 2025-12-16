@@ -60,7 +60,7 @@ Each ```route.rs``` file can contain HTTP method handlers that are automatically
 Inside each ```route.rs``` file, define async functions named after HTTP methods:
 ```rust
 */
-#![doc = include_str!("../examples/simple/api/route.rs")]
+#![doc = include_str!("../examples/simple/routes.rs")]
 /*!
 ```
 
@@ -187,11 +187,9 @@ mod parse;
 #[allow(clippy::missing_panics_doc)]
 #[proc_macro_attribute]
 pub fn folder_router(attr: TokenStream, item: TokenStream) -> TokenStream {
-    #[cfg(feature = "debug")]
-    println!(
-        "/// [folder_router] Running folder_router macro attrs:({}) item: {}",
-        attr, item
-    );
+    crate::dbg(format_args!(
+        "Running folder_router macro attrs:({attr}) item: {item}"
+    ));
 
     let mut errors = TokenStream2::new();
 
@@ -199,25 +197,32 @@ pub fn folder_router(attr: TokenStream, item: TokenStream) -> TokenStream {
 
     #[cfg(feature = "nightly")]
     {
-        #[cfg(feature = "debug")]
-        println!(
-            "/// [folder_router] Tracking path: {:?}",
-            args.abs_norm_path()
-        );
+        crate::dbg(format_args!("Tracking path: {:?}", args.abs_norm_path()));
         tracked_path::path(args.abs_norm_path().as_path().to_str().unwrap());
     }
 
     let item = parse_macro_input!(item as parse::FolderRouterItem);
     let routes = parse::FolderRouterRoutes::parse_from_path(&mut errors, &args.abs_norm_path());
 
-    let module_tree = generate::module_tree(&args, &item, &routes);
+    let module_tree = generate::module_tree(&args, &item);
     let router_impl = generate::router_impl(&mut errors, &args, &item, &routes);
 
-    quote! {
-      #item
-      #errors
-      #module_tree
-      #router_impl
+    if errors.is_empty() {
+        quote! {
+            #item
+            #module_tree
+            #router_impl
+        }
+        .into()
+    } else {
+        errors.into()
     }
-    .into()
 }
+
+#[cfg(feature = "debug")]
+fn dbg(args: std::fmt::Arguments) {
+    println!("/// [folder_router] {}", args);
+}
+
+#[cfg(not(feature = "debug"))]
+fn dbg(_: std::fmt::Arguments) {}

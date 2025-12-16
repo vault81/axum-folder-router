@@ -1,4 +1,4 @@
-error: No route.rs files found in the specified directory: '$DIR/target/tests/trybuild/axum-folder-router/some/non/existing/directory'. Make sure the path is correct and contains route.rs files.
+error: No .rs files found in the specified directory: '$DIR/target/tests/trybuild/axum-folder-router/some/non/existing/directory'. Make sure the path is correct and contains route.rs files.
  --> tests/failures/no_files.rs:6:1
   |
 6 | #[folder_router("some/non/existing/directory", AppState)]
@@ -6,7 +6,7 @@ error: No route.rs files found in the specified directory: '$DIR/target/tests/tr
   |
   = note: this error originates in the attribute macro `folder_router` (in Nightly builds, run with -Z macro-backtrace for more info)
 
-error: No routes defined in your route.rs's !
+error: No methods defined in your files!
        Ensure that at least one `pub async fn` named after an HTTP verb is defined. (e.g. get, post, put, delete)
  --> tests/failures/no_files.rs:6:1
   |
