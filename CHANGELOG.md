@@ -6,6 +6,9 @@ All notable changes to this project will be documented in this file.
 
 - Nothing yet
 
+## [0.4.0] - 2025-12-23
+- Fix nightly feature with latest toolchain
+
 ## [0.3.9] - 2025-06-04
 
 - Refactored the internals a bit
