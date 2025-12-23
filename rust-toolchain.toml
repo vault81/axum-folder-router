@@ -1,5 +1,5 @@
 [toolchain]
-channel = "nightly-2025-05-25"
+channel = "nightly-2025-12-20"
 components = [
   "cargo",
   "rust-analyzer",
@@ -10,7 +10,8 @@ components = [
 ]
 profile = "default"
 targets = [
-  "wasm32-unknown-unknown",
-  "x86_64-pc-windows-msvc",
   "x86_64-unknown-linux-gnu",
+  "x86_64-unknown-linux-musl",
+  "x86_64-pc-windows-gnu",
+  # "wasm32-unknown-unknown",
 ]

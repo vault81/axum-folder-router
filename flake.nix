@@ -81,9 +81,9 @@
             ++ buildInputs;
 
           buildInputs = buildInputs;
+          LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath buildInputs}";
+          MALLOC_CONF="thp:always,metadata_thp:always";
           shellHook = ''
-            export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath buildInputs}"
-            export MALLOC_CONF=thp:always,metadata_thp:always
           '';
         };
       });

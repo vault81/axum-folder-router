@@ -163,10 +163,10 @@ fn main() {
 ```
 */
 #![forbid(unsafe_code)]
-#![cfg_attr(feature = "nightly", feature(track_path))]
+#![cfg_attr(feature = "nightly", feature(proc_macro_tracked_path))]
 
 #[cfg(feature = "nightly")]
-use proc_macro::tracked_path;
+use proc_macro::tracked;
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
@@ -204,7 +204,7 @@ pub fn folder_router(attr: TokenStream, item: TokenStream) -> TokenStream {
             "/// [folder_router] Tracking path: {:?}",
             args.abs_norm_path()
         );
-        tracked_path::path(args.abs_norm_path().as_path().to_str().unwrap());
+        tracked::path(args.abs_norm_path().as_path().to_str().unwrap());
     }
 
     let item = parse_macro_input!(item as parse::FolderRouterItem);
